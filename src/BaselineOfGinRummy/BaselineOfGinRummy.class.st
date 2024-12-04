@@ -29,9 +29,6 @@ BaselineOfGinRummy >> projectClass [
 { #category : 'initialization' }
 BaselineOfGinRummy >> setUpDependencies: spec [
 
-  spec
-    baseline: 'Willow'
-    with: [ spec repository: 'github://github://ba-st/Willow:v15' ];
-    project: 'Willow-Deployment'
-    copyFrom: 'Willow' with: [ spec loads: 'Deployment' ]
+	spec baseline: 'Willow' with: [ spec repository: 'github://ba-st/Willow:v15' ];
+		project: 'Willow-Deployment' copyFrom: 'Willow' with: [ spec loads: 'Deployment' ]
 ]
