@@ -20,8 +20,8 @@ Card class >> newWithValue: aValue [
 Card >> renderContentOn: aCanvas [
 		
 	aCanvas image url: 'images/', value, '.svg';
-		style: 'width: 5em';
-		altText: '5 of Spades'.
+		altText: value;
+		class: 'card'.
 ]
 
 { #category : 'accessing' }
