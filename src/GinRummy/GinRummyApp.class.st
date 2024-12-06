@@ -4,6 +4,9 @@ I am the main Willow application for the Gin Rummy game.
 Class {
 	#name : 'GinRummyApp',
 	#superclass : 'WillowApplication',
+	#classVars : [
+		'SharedGame'
+	],
 	#category : 'GinRummy',
 	#package : 'GinRummy'
 }
@@ -21,6 +24,12 @@ GinRummyApp class >> handlerName [
 ]
 
 { #category : 'accessing' }
+GinRummyApp class >> sharedGame [
+
+  ^ SharedGame ifNil: [SharedGame := Game new]
+]
+
+{ #category : 'accessing' }
 GinRummyApp >> applicationTitle [
 	^ self class applicationTitle
 ]
@@ -33,40 +42,52 @@ GinRummyApp >> componentSupplierForApplication [
 
 { #category : 'accessing' }
 GinRummyApp >> contentView [
-	| game cardElements player1CardElements player2CardElements container button |
+	| deckCardElements discardCardElements player1CardElements player2CardElements playerHandContainer field button |
 
-	game := Game new.
-	cardElements := game deck collect: [ :card | Card newWithValue: card ].
-	player1CardElements := (game players at: 1) hand collect: [ :card | Card newWithValue: card ].
-	player2CardElements := (game players at: 2) hand collect: [ :card | Card newWithValue: card ].
+	deckCardElements := self class sharedGame deck collect: [ :card | Card newWithValue: card ].
+	discardCardElements := self class sharedGame discard collect: [ :card | Card newWithValue: card ].
+	player1CardElements := (self class sharedGame players at: 1) hand collect: [ :card | Card newWithValue: card ].
+	player2CardElements := (self class sharedGame players at: 2) hand collect: [ :card | Card newWithValue: card ].
+	
+	field := self componentSupplier naturalNumberFieldApplying: [ :aField | ].
+	field changeNumberTo: 2.
 		
-	container := self componentSupplier divisionContainerWrapping: [ :canvas | canvas unorderedList
-			class: 'hand';
-			addAll: player2CardElements. ]
+	playerHandContainer := self componentSupplier divisionContainerWrapping: [ :canvas |
+			field number = 1 ifTrue: [
+				canvas unorderedList
+					class: 'hand';
+					addAll: player1CardElements. ]
+				ifFalse: [ field number = 2 ifTrue: [ 
+						canvas unorderedList
+							class: 'hand';
+							addAll: player2CardElements. ] ] ]
 		applying: [ ].
+	field on trigger render: playerHandContainer.
 	
 	button := self componentSupplier asynchronicButtonLabeled: 'Shuffle and Deal' applying: [ :button | ].
 	button on click
-		serverDo: [game startHand.
-			player2CardElements := (game players at: 2) hand collect: [ :card | Card newWithValue: card ]. ];
-		render: container.
+		serverDo: [self class sharedGame startHand.
+			player2CardElements := (self class sharedGame players at: 2) hand collect: [ :card | Card newWithValue: card ]. ];
+		render: playerHandContainer.
 
 	^ [ :canvas |
 			canvas heading level1 with: 'Gin Rummy'.
+			canvas render: field.
+			canvas break.
 			canvas render: button.
 			canvas horizontalRule.
 			canvas heading level2 with: 'Deck'.
 			canvas unorderedList
 				class: 'hand';
-				addAll: cardElements.
+				addAll: deckCardElements.
 			canvas horizontalRule.
-			canvas heading level2 with: 'Player 1 Hand'.
+			canvas heading level2 with: 'Discard'.
 			canvas unorderedList
 				class: 'hand';
-				addAll: player1CardElements.
+				addAll: discardCardElements.
 			canvas horizontalRule.
-			canvas heading level2 with: 'Player 2 Hand'.
-			canvas render: container.
+			canvas heading level2 with: 'Player Hand'.
+			canvas render: playerHandContainer.
 		 ]
 ]
 

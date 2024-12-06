@@ -7,6 +7,7 @@ Class {
 	#instVars : [
 		'id',
 		'deck',
+		'discard',
 		'players'
 	],
 	#category : 'GinRummy',
@@ -19,11 +20,17 @@ Game >> deck [
 	^ deck.
 ]
 
+{ #category : 'accessing' }
+Game >> discard [
+
+	^ discard ifNil: [discard := CardStack new]
+]
+
 { #category : 'initialization' }
 Game >> initialize [ 
 
 	deck := CardStack newWith52Cards.
-	players := #(1 2) collect: [ :_ | Player new ].
+	players := #(1 2) collect: [ :_ | Player newWithGame: self ].
 	self startHand.
 ]
 
@@ -34,12 +41,27 @@ Game >> players [
 ]
 
 { #category : 'gameplay' }
+Game >> popDiscard [
+
+	^ discard removeLast
+]
+
+{ #category : 'gameplay' }
+Game >> popStock [
+
+	^ deck removeLast
+]
+
+{ #category : 'gameplay' }
 Game >> startHand [
 
 	players do: [ :player |
 		deck addAll: player hand.
 		player hand removeAll. ].
+	deck addAll: discard.
+	discard removeAll.
 	deck shuffle.
 	1 to: 10 do: [ :_ | players do: [ :player |
-		player hand add: deck removeFirst ] ]
+		player hand add: deck removeFirst ] ].
+	discard add: deck removeFirst.
 ]
