@@ -58,7 +58,7 @@ Game >> startHand [
 	players do: [ :player |
 		deck addAll: player hand.
 		player hand removeAll. ].
-	deck addAll: discard.
+	deck addAll: self discard.
 	discard removeAll.
 	deck shuffle.
 	1 to: 10 do: [ :_ | players do: [ :player |
