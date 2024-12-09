@@ -1,5 +1,5 @@
 Class {
-	#name : 'Card',
+	#name : 'CardComponent',
 	#superclass : 'WAPainter',
 	#instVars : [
 		'value'
@@ -9,7 +9,7 @@ Class {
 }
 
 { #category : 'instance creation' }
-Card class >> newWithValue: aValue [
+CardComponent class >> newWithValue: aValue [
 
 	^ (self new)
 		value: aValue;
@@ -17,7 +17,7 @@ Card class >> newWithValue: aValue [
 ]
 
 { #category : 'rendering' }
-Card >> renderContentOn: aCanvas [
+CardComponent >> renderContentOn: aCanvas [
 		
 	aCanvas image url: 'images/', value, '.svg';
 		altText: value;
@@ -25,7 +25,7 @@ Card >> renderContentOn: aCanvas [
 ]
 
 { #category : 'accessing' }
-Card >> value: aValue [
+CardComponent >> value: aValue [
 
 	value := aValue.
 ]

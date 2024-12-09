@@ -42,65 +42,51 @@ GinRummyApp >> componentSupplierForApplication [
 
 { #category : 'accessing' }
 GinRummyApp >> contentView [
-	| deckCardElements discardCardElements handCardElements deckContainer discardContainer handContainer field button drawStockButton drawUpcardButton textField|
+	| deckContainer discardContainer handContainer field newRoundButton drawStockButton drawUpcardButton button textField|
 	
 	field := self componentSupplier naturalNumberFieldApplying: [ :aField | ].
 	field changeNumberTo: 2.
 	
-	deckContainer := self componentSupplier divisionContainerWrapping: [ :canvas |
-			deckCardElements := self class sharedGame deck collect: [ :cardValue |
-				| card |
-				card := Card newWithValue: cardValue ].
-			canvas unorderedList
-				class: 'hand';
-				addAll: deckCardElements. ]
-		applying: [ ].
-	
-	discardContainer := self componentSupplier divisionContainerWrapping: [ :canvas |
-			discardCardElements := self class sharedGame discard collect: [ :card | Card newWithValue: card ].
-			canvas unorderedList
-				class: 'hand';
-				addAll: discardCardElements. ]
+	deckContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas render: (CardStackComponent
+		newWithCardStack: self class sharedGame deck) ]
 		applying: [ ].
 		
-	handContainer := self componentSupplier divisionContainerWrapping: [ :canvas |
-			handCardElements := (self class sharedGame players at: field number) hand collect: [ :card | Card newWithValue: card ].
-			canvas unorderedList
-				class: 'hand';
-				addAll: handCardElements. ]
+	discardContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas render: (CardStackComponent
+		newWithCardStack: self class sharedGame discard) ]
+		applying: [ ].
+		
+	handContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas render: (CardStackComponent
+		newWithCardStack: (self class sharedGame players at: field number) hand) ]
 		applying: [ ].
 	field on trigger render: handContainer.
 	
-	button := self componentSupplier asynchronicButtonLabeled: 'Shuffle and Deal' applying: [ :aButton | ].
-	button on click
-		serverDo: [self class sharedGame startHand.
-			handCardElements := (self class sharedGame players at: field number) hand collect: [ :card | Card newWithValue: card ]. ];
+	newRoundButton := self componentSupplier asynchronicButtonLabeled: 'Shuffle and Deal' applying: [ :aButton | ].
+	newRoundButton on click
+		serverDo: [self class sharedGame startHand ];
 		render: handContainer;
 		render: deckContainer;
 		render: discardContainer.
 		
 	drawStockButton := self componentSupplier asynchronicButtonLabeled: 'Draw from Stock' applying: [ :aButton | ].
 	drawStockButton on click
-		serverDo: [(self class sharedGame players at: field number) drawStock.
-			handCardElements := (self class sharedGame players at: field number) hand collect: [ :card | Card newWithValue: card ]. ];
+		serverDo: [(self class sharedGame players at: field number) drawStock ];
 		render: handContainer;
 		render: deckContainer.
 		
 	drawUpcardButton := self componentSupplier asynchronicButtonLabeled: 'Draw Upcard' applying: [ :aButton | ].
 	drawUpcardButton on click
-		serverDo: [(self class sharedGame players at: field number) drawUpcard.
-			handCardElements := (self class sharedGame players at: field number) hand collect: [ :card | Card newWithValue: card ]. ];
+		serverDo: [(self class sharedGame players at: field number) drawUpcard ];
 		render: handContainer;
 		render: discardContainer.
 		
 
 
-		textField := self componentSupplier singleLineTextFieldApplying:
-       [ :theField | theField setPlaceholderTo: 'Write your task' ].
-      button := self componentSupplier asynchronicButtonLabeled: 'Click me' applying: [ :theButton | ].
-		button on trigger
-			setValueTo: [self class sharedGame semaphore wait. 'foo!']
-			withoutTriggeringChangeOf: textField.
+	textField := self componentSupplier singleLineTextFieldApplying:
+		[ :theField | theField setPlaceholderTo: 'Write your task' ].
+	button := self componentSupplier asynchronicButtonLabeled: 'Click me' applying: [ :theButton | ].
+	button on trigger
+		setValueTo: [ self class sharedGame semaphore wait. 'foo!' ]
+		withoutTriggeringChangeOf: textField.
 
 
 
@@ -114,7 +100,7 @@ GinRummyApp >> contentView [
 			canvas heading level1 with: 'Gin Rummy'.
 			canvas render: field.
 			canvas break.
-			canvas render: button.
+			canvas render: newRoundButton.
 			canvas break.
 			canvas render: drawStockButton.
 			canvas break.
