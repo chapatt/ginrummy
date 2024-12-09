@@ -8,7 +8,8 @@ Class {
 		'id',
 		'deck',
 		'discard',
-		'players'
+		'players',
+		'semaphore'
 	],
 	#category : 'GinRummy',
 	#package : 'GinRummy'
@@ -50,6 +51,18 @@ Game >> popDiscard [
 Game >> popStock [
 
 	^ deck removeLast
+]
+
+{ #category : 'gameplay' }
+Game >> pushDiscard: aCard [
+
+	^ discard add: aCard
+]
+
+{ #category : 'accessing' }
+Game >> semaphore [
+
+	^ semaphore ifNil: [semaphore := Semaphore new]
 ]
 
 { #category : 'gameplay' }

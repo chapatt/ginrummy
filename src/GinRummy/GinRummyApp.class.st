@@ -42,52 +42,92 @@ GinRummyApp >> componentSupplierForApplication [
 
 { #category : 'accessing' }
 GinRummyApp >> contentView [
-	| deckCardElements discardCardElements player1CardElements player2CardElements playerHandContainer field button |
-
-	deckCardElements := self class sharedGame deck collect: [ :card | Card newWithValue: card ].
-	discardCardElements := self class sharedGame discard collect: [ :card | Card newWithValue: card ].
-	player1CardElements := (self class sharedGame players at: 1) hand collect: [ :card | Card newWithValue: card ].
-	player2CardElements := (self class sharedGame players at: 2) hand collect: [ :card | Card newWithValue: card ].
+	| deckCardElements discardCardElements handCardElements deckContainer discardContainer handContainer field button drawStockButton drawUpcardButton textField|
 	
 	field := self componentSupplier naturalNumberFieldApplying: [ :aField | ].
 	field changeNumberTo: 2.
-		
-	playerHandContainer := self componentSupplier divisionContainerWrapping: [ :canvas |
-			field number = 1 ifTrue: [
-				canvas unorderedList
-					class: 'hand';
-					addAll: player1CardElements. ]
-				ifFalse: [ field number = 2 ifTrue: [ 
-						canvas unorderedList
-							class: 'hand';
-							addAll: player2CardElements. ] ] ]
-		applying: [ ].
-	field on trigger render: playerHandContainer.
 	
-	button := self componentSupplier asynchronicButtonLabeled: 'Shuffle and Deal' applying: [ :button | ].
+	deckContainer := self componentSupplier divisionContainerWrapping: [ :canvas |
+			deckCardElements := self class sharedGame deck collect: [ :cardValue |
+				| card |
+				card := Card newWithValue: cardValue ].
+			canvas unorderedList
+				class: 'hand';
+				addAll: deckCardElements. ]
+		applying: [ ].
+	
+	discardContainer := self componentSupplier divisionContainerWrapping: [ :canvas |
+			discardCardElements := self class sharedGame discard collect: [ :card | Card newWithValue: card ].
+			canvas unorderedList
+				class: 'hand';
+				addAll: discardCardElements. ]
+		applying: [ ].
+		
+	handContainer := self componentSupplier divisionContainerWrapping: [ :canvas |
+			handCardElements := (self class sharedGame players at: field number) hand collect: [ :card | Card newWithValue: card ].
+			canvas unorderedList
+				class: 'hand';
+				addAll: handCardElements. ]
+		applying: [ ].
+	field on trigger render: handContainer.
+	
+	button := self componentSupplier asynchronicButtonLabeled: 'Shuffle and Deal' applying: [ :aButton | ].
 	button on click
 		serverDo: [self class sharedGame startHand.
-			player2CardElements := (self class sharedGame players at: 2) hand collect: [ :card | Card newWithValue: card ]. ];
-		render: playerHandContainer.
+			handCardElements := (self class sharedGame players at: field number) hand collect: [ :card | Card newWithValue: card ]. ];
+		render: handContainer;
+		render: deckContainer;
+		render: discardContainer.
+		
+	drawStockButton := self componentSupplier asynchronicButtonLabeled: 'Draw from Stock' applying: [ :aButton | ].
+	drawStockButton on click
+		serverDo: [(self class sharedGame players at: field number) drawStock.
+			handCardElements := (self class sharedGame players at: field number) hand collect: [ :card | Card newWithValue: card ]. ];
+		render: handContainer;
+		render: deckContainer.
+		
+	drawUpcardButton := self componentSupplier asynchronicButtonLabeled: 'Draw Upcard' applying: [ :aButton | ].
+	drawUpcardButton on click
+		serverDo: [(self class sharedGame players at: field number) drawUpcard.
+			handCardElements := (self class sharedGame players at: field number) hand collect: [ :card | Card newWithValue: card ]. ];
+		render: handContainer;
+		render: discardContainer.
+		
+
+
+		textField := self componentSupplier singleLineTextFieldApplying:
+       [ :theField | theField setPlaceholderTo: 'Write your task' ].
+      button := self componentSupplier asynchronicButtonLabeled: 'Click me' applying: [ :theButton | ].
+		button on trigger
+			setValueTo: [self class sharedGame semaphore wait. 'foo!']
+			withoutTriggeringChangeOf: textField.
+
+
 
 	^ [ :canvas |
+			canvas render: textField.
+			canvas render: button.
+			
+			
+			
+			canvas break.
 			canvas heading level1 with: 'Gin Rummy'.
 			canvas render: field.
 			canvas break.
 			canvas render: button.
+			canvas break.
+			canvas render: drawStockButton.
+			canvas break.
+			canvas render: drawUpcardButton.
 			canvas horizontalRule.
 			canvas heading level2 with: 'Deck'.
-			canvas unorderedList
-				class: 'hand';
-				addAll: deckCardElements.
+			canvas render: deckContainer.
 			canvas horizontalRule.
 			canvas heading level2 with: 'Discard'.
-			canvas unorderedList
-				class: 'hand';
-				addAll: discardCardElements.
+			canvas render: discardContainer.
 			canvas horizontalRule.
 			canvas heading level2 with: 'Player Hand'.
-			canvas render: playerHandContainer.
+			canvas render: handContainer.
 		 ]
 ]
 

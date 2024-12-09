@@ -18,6 +18,12 @@ Player class >> newWithGame: aGame [
 ]
 
 { #category : 'gameplay' }
+Player >> discard: aCard [
+
+	game pushDiscard: (hand remove: aCard)
+]
+
+{ #category : 'gameplay' }
 Player >> drawStock [
 
 	hand add: game popStock
