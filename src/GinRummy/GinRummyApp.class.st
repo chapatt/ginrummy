@@ -55,8 +55,10 @@ GinRummyApp >> contentView [
 		newWithCardStack: self class sharedGame discard) ]
 		applying: [ ].
 		
-	handContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas render: (CardStackComponent
-		newWithCardStack: (self class sharedGame players at: field number) hand) ]
+	handContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas render: ((CardStackComponent
+			newWithCardStack: (self class sharedGame players at: field number) hand)
+			onDiscard: [ ];
+			yourself) ]
 		applying: [ ].
 	field on trigger render: handContainer.
 	

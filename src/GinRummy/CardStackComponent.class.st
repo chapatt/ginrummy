@@ -27,11 +27,19 @@ CardStackComponent >> cardStack: aCardStack [
 	cardStack := aCardStack
 ]
 
+{ #category : 'as yet unclassified' }
+CardStackComponent >> onDiscard: aBlock [
+]
+
 { #category : 'rendering' }
 CardStackComponent >> renderContentOn: aCanvas [
-		
-	cards := cardStack collect: [ :cardValue | CardComponent newWithValue: cardValue ].
-	aCanvas unorderedList
+	| card |
+
+	cards := cardStack collect: [ :cardValue |
+		card := CardComponent newWithValue: cardValue.
+		card announcer when: CardSelectedAnnouncement do: [ ] for: self.
+		card ].
+	aCanvas orderedList
 		class: 'hand';
 		addAll: cards
 ]

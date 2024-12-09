@@ -2,7 +2,8 @@ Class {
 	#name : 'CardComponent',
 	#superclass : 'WAPainter',
 	#instVars : [
-		'value'
+		'value',
+		'announcer'
 	],
 	#category : 'GinRummy',
 	#package : 'GinRummy'
@@ -16,12 +17,25 @@ CardComponent class >> newWithValue: aValue [
 		yourself.
 ]
 
+{ #category : 'accessing' }
+CardComponent >> announcer [
+
+	^ announcer ifNil: [ announcer := Announcer new ]
+]
+
 { #category : 'rendering' }
 CardComponent >> renderContentOn: aCanvas [
-		
-	aCanvas image url: 'images/', value, '.svg';
-		altText: value;
-		class: 'card'.
+	| button |
+	
+	button := ImageWebView locatedAt: 'images/', value, '.svg' applying: [ :anImage | anImage addClass card ].
+	button on click
+		updateCssClasses: [ :classes | classes removeClass: 'selected' ]
+			onElementsMatching: [ :canvas | (canvas jQuery this closest: '.hand') find: '.card' ];
+		updateCssClasses: [ :classes | classes addClass: 'selected' ]
+			onElementsMatching: [ :canvas | canvas jQuery this ];
+		userAgentDo: [ :canvas | canvas jQuery this ];
+		serverDo: [ self announcer announce: CardSelectedAnnouncement new ].
+	aCanvas render: button.
 ]
 
 { #category : 'accessing' }
