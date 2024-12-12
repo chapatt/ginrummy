@@ -11,13 +11,13 @@ Class {
 { #category : 'accessing' }
 GinRummy class >> classification [
 
-	^ Classification
+	^ Willow classification 
 ]
 
 { #category : 'initialization' }
 GinRummy class >> initialize [ 
 
-	Classification := Namespace new.
-	Classification bind: #card to: 'card'.
-	Classification bind: #selected to: 'selected'.
+	self classification bind: #hand to: 'hand'.
+	self classification bind: #card to: 'card'.
+	self classification bind: #selected to: 'selected'.
 ]

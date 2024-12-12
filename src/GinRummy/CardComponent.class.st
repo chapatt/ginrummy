@@ -27,14 +27,10 @@ CardComponent >> announcer [
 CardComponent >> renderContentOn: aCanvas [
 	| button |
 	
-	button := ImageWebView locatedAt: 'images/', value, '.svg' applying: [ :anImage | anImage addClass card ].
+	button := ImageWebView locatedAt: 'images/', value, '.svg' applying: [ :anImage |
+		( anImage addScript js: [ :canvas | canvas jQuery this dataAt: 'value' put: value ] ) + anImage addClass card ].
 	button on click
-		updateCssClasses: [ :classes | classes removeClass: 'selected' ]
-			onElementsMatching: [ :canvas | (canvas jQuery this closest: '.hand') find: '.card' ];
-		updateCssClasses: [ :classes | classes addClass: 'selected' ]
-			onElementsMatching: [ :canvas | canvas jQuery this ];
-		userAgentDo: [ :canvas | canvas jQuery this ];
-		serverDo: [ self announcer announce: CardSelectedAnnouncement new ].
+		serverDo: [ self announcer announce: ( CardSelectedAnnouncement newWithValue: value ) ].
 	aCanvas render: button.
 ]
 

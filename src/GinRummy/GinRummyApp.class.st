@@ -42,7 +42,7 @@ GinRummyApp >> componentSupplierForApplication [
 
 { #category : 'accessing' }
 GinRummyApp >> contentView [
-	| deckContainer discardContainer handContainer field newRoundButton drawStockButton drawUpcardButton button textField|
+	| deckContainer discardContainer handContainer field newRoundButton drawStockButton drawUpcardButton button textField handComponent selectedCard discardButton |
 	
 	field := self componentSupplier naturalNumberFieldApplying: [ :aField | ].
 	field changeNumberTo: 2.
@@ -55,11 +55,10 @@ GinRummyApp >> contentView [
 		newWithCardStack: self class sharedGame discard) ]
 		applying: [ ].
 		
-	handContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas render: ((CardStackComponent
-			newWithCardStack: (self class sharedGame players at: field number) hand)
-			onDiscard: [ ];
-			yourself) ]
-		applying: [ ].
+	handComponent := CardStackComponent
+			newWithCardStack: (self class sharedGame players at: field number) hand.
+	handComponent announcer when: CardSelectedAnnouncement do: [ :announcement | selectedCard := announcement value ] for: self.
+	handContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas render: handComponent ] applying: [ ].
 	field on trigger render: handContainer.
 	
 	newRoundButton := self componentSupplier asynchronicButtonLabeled: 'Shuffle and Deal' applying: [ :aButton | ].
@@ -78,6 +77,12 @@ GinRummyApp >> contentView [
 	drawUpcardButton := self componentSupplier asynchronicButtonLabeled: 'Draw Upcard' applying: [ :aButton | ].
 	drawUpcardButton on click
 		serverDo: [(self class sharedGame players at: field number) drawUpcard ];
+		render: handContainer;
+		render: discardContainer.
+		
+	discardButton := self componentSupplier asynchronicButtonLabeled: 'Discard Selected Card' applying: [ :aButton | ].
+	discardButton on click
+		serverDo: [(self class sharedGame players at: field number) discard: selectedCard ];
 		render: handContainer;
 		render: discardContainer.
 		
@@ -107,6 +112,8 @@ GinRummyApp >> contentView [
 			canvas render: drawStockButton.
 			canvas break.
 			canvas render: drawUpcardButton.
+			canvas break.
+			canvas render: discardButton.
 			canvas horizontalRule.
 			canvas heading level2 with: 'Deck'.
 			canvas render: deckContainer.

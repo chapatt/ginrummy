@@ -3,7 +3,8 @@ Class {
 	#superclass : 'WAPainter',
 	#instVars : [
 		'cards',
-		'cardStack'
+		'cardStack',
+		'announcer'
 	],
 	#classInstVars : [
 		'cardStack',
@@ -22,24 +23,32 @@ CardStackComponent class >> newWithCardStack: aCardStack [
 ]
 
 { #category : 'accessing' }
+CardStackComponent >> announcer [
+
+	^ announcer ifNil: [ announcer := Announcer new ]
+]
+
+{ #category : 'accessing' }
 CardStackComponent >> cardStack: aCardStack [
 
 	cardStack := aCardStack
 ]
 
-{ #category : 'as yet unclassified' }
-CardStackComponent >> onDiscard: aBlock [
-]
-
 { #category : 'rendering' }
 CardStackComponent >> renderContentOn: aCanvas [
-	| card |
+	| card list |
 
 	cards := cardStack collect: [ :cardValue |
 		card := CardComponent newWithValue: cardValue.
-		card announcer when: CardSelectedAnnouncement do: [ ] for: self.
+		card announcer when: CardSelectedAnnouncement do: [ self announcer announce: ( CardSelectedAnnouncement newWithValue: cardValue ) ] for: self.
 		card ].
-	aCanvas orderedList
-		class: 'hand';
-		addAll: cards
+	list := UnorderedListWebView new
+		initializeApplying: [ :aBuilder | aBuilder addClass hand ]
+		listing: cards
+		applyingToEach: [ :aBuilder | aBuilder addScript js: [ :itemCanvas |
+			( itemCanvas jQuery this find: '.card' )
+				on: 'click'
+				do: ( ( ( itemCanvas jQuery this closest: '.hand' ) find: 'li' ) removeClass: 'selected' ),
+				( ( itemCanvas jQuery this closest: 'li' ) addClass: 'selected' ) ] ].
+	aCanvas render: list.
 ]
