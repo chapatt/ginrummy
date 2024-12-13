@@ -30,5 +30,8 @@ BaselineOfGinRummy >> projectClass [
 BaselineOfGinRummy >> setUpDependencies: spec [
 
 	spec baseline: 'Willow' with: [ spec repository: 'github://ba-st/Willow:v15' ];
-		project: 'Willow-Deployment' copyFrom: 'Willow' with: [ spec loads: 'Deployment' ]
+		project: 'Willow-Deployment' copyFrom: 'Willow' with: [ spec loads: 'Deployment' ].
+		
+	spec baseline: 'ZincHTTPComponents' with: [ spec repository: 'github://svenvc/zinc/repository' ];
+		project: 'Zinc' copyFrom: 'ZincHTTPComponents' with: [ spec loads: 'Server-Sent-Events' ].
 ]
