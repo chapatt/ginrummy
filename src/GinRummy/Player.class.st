@@ -17,6 +17,18 @@ Player class >> newWithGame: aGame [
 		yourself.
 ]
 
+{ #category : 'testing' }
+Player >> canDiscard [
+
+	^ (game isCurrentPlayer: self) & (hand size >= 11)
+]
+
+{ #category : 'testing' }
+Player >> canDraw [
+
+	^ (game isCurrentPlayer: self) & (hand size < 11)
+]
+
 { #category : 'gameplay' }
 Player >> discard: aCard [
 

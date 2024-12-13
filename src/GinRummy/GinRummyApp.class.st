@@ -42,78 +42,84 @@ GinRummyApp >> componentSupplierForApplication [
 
 { #category : 'accessing' }
 GinRummyApp >> contentView [
-	| deckContainer discardContainer handContainer field newRoundButton drawStockButton drawUpcardButton button textField handComponent selectedCard discardButton |
+	| deckContainer discardContainer handContainer field newRoundButton drawStockButton drawUpcardButton handComponent selectedCard discardButton deckComponent discardComponent actionsContainer currentPlayerContainer |
+	
+	currentPlayerContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas paragraph: 'Current Player: ', self class sharedGame currentPlayer asString. ]
+	applying: [ ].
 	
 	field := self componentSupplier naturalNumberFieldApplying: [ :aField | ].
-	field changeNumberTo: 2.
+	field changeNumberTo: 1.
+
+	deckComponent := CardComponent newWithValue: '1B'.
+	deckContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas render: deckComponent ] applying: [ ].
 	
-	deckContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas render: (CardStackComponent
-		newWithCardStack: self class sharedGame deck) ]
-		applying: [ ].
-		
-	discardContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas render: (CardStackComponent
-		newWithCardStack: self class sharedGame discard) ]
+	discardComponent := CardComponent new.
+	discardContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas |
+			self class sharedGame discard ifNotEmpty: [ discardComponent value: self class sharedGame discard last. aCanvas render: discardComponent ] ]
 		applying: [ ].
 		
 	handComponent := CardStackComponent
-			newWithCardStack: (self class sharedGame players at: field number) hand.
+			new.
 	handComponent announcer when: CardSelectedAnnouncement do: [ :announcement | selectedCard := announcement value ] for: self.
-	handContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | aCanvas render: handComponent ] applying: [ ].
+	handContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas | handComponent cardStack: (self class sharedGame players at: field number) hand.
+			aCanvas render: handComponent ]
+		applying: [ ].
 	field on trigger render: handContainer.
 	
 	newRoundButton := self componentSupplier asynchronicButtonLabeled: 'Shuffle and Deal' applying: [ :aButton | ].
+		
+	actionsContainer := self componentSupplier divisionContainerWrapping: [ :aCanvas |
+			drawStockButton := self componentSupplier asynchronicButtonLabeled: 'Draw from Stock'
+				applying: [ :aButton | ( self class sharedGame players at: field number ) canDraw ifFalse: [ aButton beDisabled ] ].
+			drawStockButton on click
+				serverDo: [(self class sharedGame players at: field number) drawStock ];
+				render: handContainer;
+				render: deckContainer;
+				render: actionsContainer.
+			aCanvas render: drawStockButton.
+			
+			aCanvas break.
+			
+			drawUpcardButton := self componentSupplier asynchronicButtonLabeled: 'Draw Upcard' applying: [ :aButton | ( self class sharedGame players at: field number ) canDraw ifFalse: [ aButton beDisabled ] ].
+			drawUpcardButton on click
+				serverDo: [(self class sharedGame players at: field number) drawUpcard ];
+				render: handContainer;
+				render: discardContainer;
+				render: actionsContainer.
+			aCanvas render: drawUpcardButton.
+			
+			aCanvas break.
+			
+			discardButton := self componentSupplier asynchronicButtonLabeled: 'Discard Selected Card' applying: [ :aButton | ( self class sharedGame players at: field number ) canDiscard ifFalse: [ aButton beDisabled ] ].
+	discardButton on click
+				serverDo: [ (self class sharedGame players at: field number) discard: selectedCard ];
+				render: currentPlayerContainer;
+				render: handContainer;
+				render: discardContainer;
+				render: actionsContainer.
+			aCanvas render: discardButton ]
+		applying: [ ].
+		
+
+	field on trigger render: actionsContainer.
+	
 	newRoundButton on click
 		serverDo: [self class sharedGame startHand ];
+		render: currentPlayerContainer;
 		render: handContainer;
 		render: deckContainer;
-		render: discardContainer.
-		
-	drawStockButton := self componentSupplier asynchronicButtonLabeled: 'Draw from Stock' applying: [ :aButton | ].
-	drawStockButton on click
-		serverDo: [(self class sharedGame players at: field number) drawStock ];
-		render: handContainer;
-		render: deckContainer.
-		
-	drawUpcardButton := self componentSupplier asynchronicButtonLabeled: 'Draw Upcard' applying: [ :aButton | ].
-	drawUpcardButton on click
-		serverDo: [(self class sharedGame players at: field number) drawUpcard ];
-		render: handContainer;
-		render: discardContainer.
-		
-	discardButton := self componentSupplier asynchronicButtonLabeled: 'Discard Selected Card' applying: [ :aButton | ].
-	discardButton on click
-		serverDo: [(self class sharedGame players at: field number) discard: selectedCard ];
-		render: handContainer;
-		render: discardContainer.
-		
-
-
-	textField := self componentSupplier singleLineTextFieldApplying:
-		[ :theField | theField setPlaceholderTo: 'Write your task' ].
-	button := self componentSupplier asynchronicButtonLabeled: 'Click me' applying: [ :theButton | ].
-	button on trigger
-		setValueTo: [ self class sharedGame semaphore wait. 'foo!' ]
-		withoutTriggeringChangeOf: textField.
-
-
+		render: discardContainer;
+		render: actionsContainer.
 
 	^ [ :canvas |
-			canvas render: textField.
-			canvas render: button.
-			
-			
-			
+			canvas render: currentPlayerContainer.
 			canvas break.
 			canvas heading level1 with: 'Gin Rummy'.
 			canvas render: field.
 			canvas break.
 			canvas render: newRoundButton.
 			canvas break.
-			canvas render: drawStockButton.
-			canvas break.
-			canvas render: drawUpcardButton.
-			canvas break.
-			canvas render: discardButton.
+			canvas render: actionsContainer.
 			canvas horizontalRule.
 			canvas heading level2 with: 'Deck'.
 			canvas render: deckContainer.
@@ -122,8 +128,7 @@ GinRummyApp >> contentView [
 			canvas render: discardContainer.
 			canvas horizontalRule.
 			canvas heading level2 with: 'Player Hand'.
-			canvas render: handContainer.
-		 ]
+			canvas render: handContainer ]
 ]
 
 { #category : 'accessing' }

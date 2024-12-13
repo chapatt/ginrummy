@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'cards',
 		'cardStack',
-		'announcer'
+		'announcer',
+		'canSelect'
 	],
 	#classInstVars : [
 		'cardStack',
@@ -29,9 +30,22 @@ CardStackComponent >> announcer [
 ]
 
 { #category : 'accessing' }
+CardStackComponent >> canSelect: aBoolean [
+
+	canSelect := aBoolean
+]
+
+{ #category : 'accessing' }
 CardStackComponent >> cardStack: aCardStack [
 
 	cardStack := aCardStack
+]
+
+{ #category : 'initialization' }
+CardStackComponent >> initialize [ 
+
+	super initialize.
+	canSelect := true
 ]
 
 { #category : 'rendering' }
@@ -45,10 +59,10 @@ CardStackComponent >> renderContentOn: aCanvas [
 	list := UnorderedListWebView new
 		initializeApplying: [ :aBuilder | aBuilder addClass hand ]
 		listing: cards
-		applyingToEach: [ :aBuilder | aBuilder addScript js: [ :itemCanvas |
+		applyingToEach: [ :aBuilder | canSelect ifTrue: [ aBuilder addScript js: [ :itemCanvas |
 			( itemCanvas jQuery this find: '.card' )
 				on: 'click'
 				do: ( ( ( itemCanvas jQuery this closest: '.hand' ) find: 'li' ) removeClass: 'selected' ),
-				( ( itemCanvas jQuery this closest: 'li' ) addClass: 'selected' ) ] ].
+					( ( itemCanvas jQuery this closest: 'li' ) addClass: 'selected' ) ] ] ].
 	aCanvas render: list.
 ]

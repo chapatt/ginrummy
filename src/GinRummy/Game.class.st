@@ -9,11 +9,18 @@ Class {
 		'deck',
 		'discard',
 		'players',
-		'semaphore'
+		'semaphore',
+		'currentPlayer'
 	],
 	#category : 'GinRummy',
 	#package : 'GinRummy'
 }
+
+{ #category : 'accessing' }
+Game >> currentPlayer [
+
+	^ currentPlayer
+]
 
 { #category : 'accessing' }
 Game >> deck [
@@ -27,12 +34,25 @@ Game >> discard [
 	^ discard ifNil: [discard := CardStack new]
 ]
 
+{ #category : 'as yet unclassified' }
+Game >> getNextPlayer [
+
+	^ (currentPlayer >= players size) ifTrue: [ 1 ] ifFalse: [ currentPlayer := currentPlayer + 1 ]
+]
+
 { #category : 'initialization' }
 Game >> initialize [ 
 
 	deck := CardStack newWith52Cards.
 	players := #(1 2) collect: [ :_ | Player newWithGame: self ].
+	currentPlayer := 1.
 	self startHand.
+]
+
+{ #category : 'testing' }
+Game >> isCurrentPlayer: aPlayer [
+
+	^ ( players at: currentPlayer ) == aPlayer
 ]
 
 { #category : 'accessing' }
@@ -56,7 +76,16 @@ Game >> popStock [
 { #category : 'gameplay' }
 Game >> pushDiscard: aCard [
 
-	^ discard add: aCard
+	self rotatePlayer.
+	discard add: aCard.
+	self semaphore signalAll.
+	self semaphore wait.
+]
+
+{ #category : 'as yet unclassified' }
+Game >> rotatePlayer [
+
+	currentPlayer := self getNextPlayer
 ]
 
 { #category : 'accessing' }
@@ -76,5 +105,6 @@ Game >> startHand [
 	deck shuffle.
 	1 to: 10 do: [ :_ | players do: [ :player |
 		player hand add: deck removeFirst ] ].
+	currentPlayer := 1.
 	discard add: deck removeFirst.
 ]
